@@ -1,0 +1,63 @@
+#inlude <Servo.h> //servo library
+
+const int thermistor = A0; //declare pins
+const int photoresistor = A1;
+const int knob = A2;
+const int buttonup = 5;
+const int buttondown = 6;
+const int switch = 7;
+Servo motor; //declare servo
+
+void setup(){
+pinMode(buttonup, INPUT); //declare inputs/outputs
+pinMode(buttondown, INPUT);
+pinMode(switch, INPUT);
+motor.attach(9); //declare servo pin
+Serial.begin(9600); //begin serial monitor
+}
+
+int temp; //stores thermistor value
+int light; //stores photoresistor value
+int setpoint; //stores the setpoint temp
+int up; //stores up button state
+int down; //stores down button state
+int mode; //stores manual vs automatic mode
+
+void loop(){
+temp=analogRead(thermistor); //read thermistor
+temp=map(temp, 20, 385, 15, 30); //map thermistor from 15-30 degrees
+light=analogRead(photoresistor); //read photoresistor
+light=map(light, 0, 1023, 0, 255); //map photoresitsor from 0-255
+setpoint=analogRead(knob); //read knob
+setpoint=map(setpoint, 0, 1023, 15, 30); //map setpoint temps from 15-30 degrees
+mode=digitalRead(switch); // read the switch
+
+if(mode==HIGH){ //if in automatic mode
+  if(temp<=setpoint && light>=50){ //if the temp is less than setpoint and photoresistor reads above 50 (light/dark setpoint)
+  motor.write(180); //motor rotates backwards until open
+  }
+  else if(temp>setpoint && light<50){ //if temp is greater than setpoint or photoresistor reads below 50 
+  motor.write(0); //rotate motor until fully closed
+  }
+  else{ //otherwise motor does not move
+  motor.write(90);
+  }
+}
+
+else if(mode==LOW){ //if in manual mode
+up=digitalRead(buttonup); //read state of the up button
+down=digitalRead(buttondown); //read state of the down button
+
+  if(up==HIGH && down==LOW){ //if the up button is pressed
+  motor.write(180); //rotate the motor until fully open
+  }
+  
+  else if(up==LOW && down==HIGH){ //if the down button is pressed
+  motor.write(0); //rotate motor until closed
+  }
+  
+  else{ //otherwise motor does not move
+  motor.write(90);
+  }
+}
+}
